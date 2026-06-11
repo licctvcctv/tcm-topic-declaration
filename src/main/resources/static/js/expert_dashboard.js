@@ -82,21 +82,21 @@ async function renderTasks() {
         accepted.forEach(t => {
             const tr = document.createElement('tr');
             
-            const statusText = t.status === 1 ? '已提交(锁定)' : '评审中(草稿)';
-            const statusBadge = t.status === 1 ? 'badge-success' : 'badge-pending';
+            const statusText = t.status === 2 ? '已提交(锁定)' : (t.status === 1 ? '评审中(草稿)' : '未开始');
+            const statusBadge = t.status === 2 ? 'badge-success' : 'badge-pending';
             
             const scoreVal = t.score !== null ? t.score.toFixed(2) : '-';
-            const recText = t.status === 1 ? (t.recommendResult === 1 ? '推荐立项' : '不推荐') : '-';
+            const recText = t.status === 2 ? (t.recommendResult === 1 ? '推荐立项' : '不推荐') : '-';
             
             const downloadBtn = t.anonymousPageUrl ? 
                 `<button class="btn btn-outline btn-sm" onclick="api.file.download('${t.anonymousPageUrl}', '双盲活页_${t.topicId}')">下载活页</button>` 
                 : '<span style="color:red;">未上传活页</span>';
 
-            let opt = t.status === 0 ? `<button class="btn btn-primary btn-sm" onclick="openReviewModal(${t.id})">录入打分意见</button>`
+            let opt = t.status !== 2 ? `<button class="btn btn-primary btn-sm" onclick="openReviewModal(${t.id})">录入打分意见</button>`
                                      : `<span style="font-size:0.8rem; color:var(--gray);">已锁定</span>`;
 
             tr.innerHTML = `
-                <td><strong>课题# ${t.topicId}</strong></td>
+                <td><strong>${t.topicTitle || ('课题# ' + t.topicId)}</strong></td>
                 <td>${categoriesMap[t.majorDirection] || '双盲方向'}</td>
                 <td>${downloadBtn}</td>
                 <td><strong>${scoreVal}</strong></td>

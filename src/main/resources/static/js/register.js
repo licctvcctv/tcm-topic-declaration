@@ -79,7 +79,7 @@ async function handleRegisterFileChange(inputElement, prefix) {
         
         urlInput.value = downloadUrl;
         if (file.type.startsWith('image/')) {
-            previewImg.src = downloadUrl;
+            previewImg.src = URL.createObjectURL(file);
             previewImg.style.display = 'block';
         } else {
             previewImg.style.display = 'none';
@@ -161,7 +161,7 @@ async function handleExpertRegister(event) {
             minorDirections: minorList.join(','),
             expertSignature
         });
-        showGlobalToast('专家注册成功！已可登录系统参与评审。', 'success');
+        showGlobalToast('专家注册成功！请等待超级管理员审核启用后登录。', 'success');
         setTimeout(() => { window.location.href = '/login.html'; }, 3000);
     } catch (err) {
         showGlobalToast(err.message || '专家注册失败', 'error');

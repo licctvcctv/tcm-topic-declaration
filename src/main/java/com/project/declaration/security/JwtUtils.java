@@ -3,6 +3,7 @@ package com.project.declaration.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +22,13 @@ public class JwtUtils {
 
     @Value("${jwt.expiration}")
     private Long expiration;
+
+    @PostConstruct
+    public void validateSecret() {
+        if (secret == null || secret.trim().length() < 32) {
+            throw new IllegalStateException("JWT_SECRET must be provided and contain at least 32 characters");
+        }
+    }
 
     private SecretKey getSigningKey() {
         byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);

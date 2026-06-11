@@ -33,8 +33,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!user.getOrgId().equals(currentOrgId)) {
             throw new BusinessException("无权操作其他机构的用户");
         }
-        if (user.getStatus() != 0) {
-            throw new BusinessException("该用户已被审核过，不可重复审核");
+        if (request.getStatus() == 1 && user.getStatus() != 0) {
+            throw new BusinessException("只有待审核用户可以被批准启用");
+        }
+        if (request.getStatus() == 2 && user.getStatus() == 2) {
+            throw new BusinessException("该用户已被禁用");
         }
 
         user.setStatus(request.getStatus());
@@ -44,7 +47,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void assignDeclarationAuth(AssignAuthRequest request, Long currentOrgId) {
+    public synchronized void assignDeclarationAuth(AssignAuthRequest request, Long currentOrgId) {
         User user = this.getById(request.getUserId());
         if (user == null) {
             throw new BusinessException("用户不存在");
@@ -101,5 +104,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         inst.setQuota(newQuota);
         inst.setUpdateTime(LocalDateTime.now());
         institutionMapper.updateById(inst);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void auditSystemUser(AuditUserRequest request, String role) {
+        User user = this.getById(request.getUserId());
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+        if (!role.equals(user.getRole())) {
+            throw new BusinessException("用户角色不匹配，无法审核");
+        }
+        if (request.getStatus() == 1 && user.getStatus() != 0) {
+            throw new BusinessException("只有待审核用户可以被批准启用");
+        }
+        if (request.getStatus() == 2 && user.getStatus() == 2) {
+            throw new BusinessException("该用户已被禁用");
+        }
+        user.setStatus(request.getStatus());
+        user.setUpdateTime(LocalDateTime.now());
+        this.updateById(user);
     }
 }

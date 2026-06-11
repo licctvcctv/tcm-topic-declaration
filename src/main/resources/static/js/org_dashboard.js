@@ -41,8 +41,8 @@ async function initOrgDashboard() {
         // 缓存员工映射
         instUsers.forEach(u => usersMap[u.id] = u.realName);
 
-        document.getElementById('org-quota-assigned').textContent = instUsers.filter(u => u.limitDeclaration === 1).length;
-        document.getElementById('org-topics-submitted').textContent = instTopics.filter(t => t.status >= 1 && t.status !== 4).length;
+        document.getElementById('org-quota-assigned').textContent = instUsers.filter(u => u.hasDeclarationAuth === 1).length;
+        document.getElementById('org-topics-submitted').textContent = instTopics.filter(t => [1, 2, 4, 5, 6, 8].includes(t.status)).length;
 
         // 获取机构限额 (通过已注册的机构列表匹配)
         try {
@@ -93,10 +93,10 @@ async function renderUsersTable() {
             const tr = document.createElement('tr');
             const statusText = u.status === 1 ? '已激活' : '待批准';
             const statusBadge = u.status === 1 ? 'badge-success' : 'badge-pending';
-            const authChecked = u.limitDeclaration === 1 ? 'checked' : '';
+            const authChecked = u.hasDeclarationAuth === 1 ? 'checked' : '';
 
             let opt = u.status === 0 ? `<button class="btn btn-primary btn-sm" onclick="auditUser(${u.id}, 1)">批准</button>` 
-                                     : `<button class="btn btn-outline btn-sm" onclick="auditUser(${u.id}, 0)">禁用</button>`;
+                                     : `<button class="btn btn-outline btn-sm" onclick="auditUser(${u.id}, 2)">禁用</button>`;
 
             tr.innerHTML = `
                 <td><strong>${u.realName}</strong></td>
@@ -125,10 +125,10 @@ async function auditUser(userId, status) {
 }
 
 async function toggleDeclarationAuth(userId, checkbox) {
-    const limitDeclaration = checkbox.checked ? 1 : 0;
+    const hasAuth = checkbox.checked ? 1 : 0;
     try {
-        await api.institution.assignAuth({ userId, hasAuth: limitDeclaration });
-        showToast(limitDeclaration === 1 ? '授权成功！' : '已取消授权！', 'success');
+        await api.institution.assignAuth({ userId, hasAuth });
+        showToast(hasAuth === 1 ? '授权成功！' : '已取消授权！', 'success');
         initOrgDashboard();
     } catch (e) {
         showToast('授权修改失败: ' + e.message, 'error');
@@ -163,15 +163,15 @@ async function renderTopicsTable() {
             let announcementHtml = '-';
             if (t.status === 7) {
                 resultHtml = '<span class="badge badge-error">格式审核不通过</span>';
-            } else if (t.status === 6 && t.finalPass === 1) {
+            } else if (t.status === 8 && t.finalPass === 1) {
                 resultHtml = '<span class="badge badge-success">立项通过</span>';
                 if (t.announcementContent) {
                     announcementHtml = `<span class="badge badge-info" style="cursor:pointer;" onclick="alert('${t.announcementContent.replace(/'/g, "\\'")}')">查看公告</span>`;
                 }
-            } else if (t.status === 6 && t.finalPass === 2) {
+            } else if (t.status === 8 && t.finalPass === 2) {
                 resultHtml = '<span class="badge badge-error">立项不通过</span>';
             } else if (t.status === 6) {
-                resultHtml = '<span class="badge badge-pending">待公布</span>';
+                resultHtml = '<span class="badge badge-pending">待发布</span>';
             }
 
             let opt = t.status === 1 ? `<button class="btn btn-primary btn-sm" onclick="openAuditModal(${t.id}, '${author}')">初审</button>` 
@@ -201,8 +201,9 @@ function getStatusBadge(status) {
         case 3: return '<span class="badge badge-error">退回修改</span>';
         case 4: return '<span class="badge badge-info">待分配专家</span>';
         case 5: return '<span class="badge badge-pending">专家评审中</span>';
-        case 6: return '<span class="badge badge-success">评审结束</span>';
+        case 6: return '<span class="badge badge-draft">待发布结果</span>';
         case 7: return '<span class="badge badge-error">格式审核不通过</span>';
+        case 8: return '<span class="badge badge-success">结果已发布</span>';
         default: return '<span class="badge badge-draft">未知</span>';
     }
 }

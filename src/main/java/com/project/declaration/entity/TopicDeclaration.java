@@ -21,7 +21,7 @@ public class TopicDeclaration {
     private String contactMobile;
     private String taskBookUrl;
     private String anonymousPageUrl;
-    private Integer status; // 0-草稿, 1-已提交待机构审核, 2-机构审核通过待超管格式审核, 3-退回修改, 4-超管审核通过, 5-评审中, 6-评审结束
+    private Integer status; // 0-草稿, 1-待机构审核, 2-待格式审核, 3-机构退回, 4-待专家分配, 5-评审中, 6-待发布, 7-格式不通过, 8-已发布
     private BigDecimal averageScore;
     private Integer autoPass; // 0-不通过, 1-通过
     private Integer finalPass; // 0-待发布/未发布, 1-立项通过, 2-立项不通过

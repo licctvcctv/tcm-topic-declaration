@@ -49,8 +49,9 @@ function getStatusBadgeText(status) {
         case 3: return '<span class="badge badge-error">退回修改</span>';
         case 4: return '<span class="badge badge-info">待分配专家</span>';
         case 5: return '<span class="badge badge-pending">专家评审中</span>';
-        case 6: return '<span class="badge badge-success">评审结束</span>';
+        case 6: return '<span class="badge badge-draft">待发布结果</span>';
         case 7: return '<span class="badge badge-error">格式审核不通过</span>';
+        case 8: return '<span class="badge badge-success">结果已发布</span>';
         default: return `<span class="badge badge-draft">未知(${status})</span>`;
     }
 }
@@ -174,7 +175,7 @@ async function openAssignModal(topicId, orgName, categoryId) {
                     <input type="checkbox" name="assign-expert-checkbox" value="${exp.id}">
                     <strong>${exp.realName}</strong> (方向: ${categoriesMap[exp.majorDirection]})
                 </label>
-                <span style="font-size:0.75rem; color:var(--gray);">当前评审课题数: ${exp.limitDeclaration || 0}</span>
+                <span style="font-size:0.75rem; color:var(--gray);">专家ID: ${exp.id}</span>
             `;
             listContainer.appendChild(item);
         });

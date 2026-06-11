@@ -24,9 +24,12 @@ mybatis-plus:
 
 # JWT 配置，支持环境变量覆盖以保障安全
 jwt:
-  secret: ${JWT_SECRET:c3ByaW5nLWJvb3Qtc2VjdXJpdHktand0LWVudGVycHJpc2UtMjg4LWJpdC1zZWNyZXQta2V5LXN1cGVyLXNlY3VyZQ==}
+  secret: ${JWT_SECRET:}
   expiration: ${JWT_EXPIRATION:86400} # 默认24小时 (秒)
 
 # 文件上传与保存路径
 file:
   upload-dir: ${FILE_UPLOAD_DIR:./uploads}
+
+review:
+  invitation-timeout-hours: ${REVIEW_INVITATION_TIMEOUT_HOURS:72}

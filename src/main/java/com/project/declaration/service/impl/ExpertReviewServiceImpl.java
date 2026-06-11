@@ -17,6 +17,8 @@ import com.project.declaration.mapper.UserMapper;
 import com.project.declaration.service.ExpertReviewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +38,9 @@ public class ExpertReviewServiceImpl extends ServiceImpl<ExpertReviewTaskMapper,
 
     @Autowired
     private SysNotificationMapper notificationMapper;
+
+    @Value("${review.invitation-timeout-hours:72}")
+    private Long invitationTimeoutHours;
 
     @Override
     public List<User> recommendExpertsForTopic(Long topicId) {
@@ -65,12 +70,15 @@ public class ExpertReviewServiceImpl extends ServiceImpl<ExpertReviewTaskMapper,
             }
             
             return majorMatch || minorMatch;
-        }).collect(Collectors.toList());
+        }).collect(Collectors.collectingAndThen(Collectors.toList(), list -> {
+            Collections.shuffle(list);
+            return list;
+        }));
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void assignExperts(ExpertAssignRequest request) {
+    public synchronized void assignExperts(ExpertAssignRequest request) {
         TopicDeclaration topic = topicDeclarationMapper.selectById(request.getTopicId());
         if (topic == null) {
             throw new BusinessException("课题不存在");
@@ -78,9 +86,21 @@ public class ExpertReviewServiceImpl extends ServiceImpl<ExpertReviewTaskMapper,
         if (topic.getStatus() != 4 && topic.getStatus() != 5) {
             throw new BusinessException("该课题当前状态不支持分配专家");
         }
+        if (request.getExpertIds().stream().distinct().count() != request.getExpertIds().size()) {
+            throw new BusinessException("同一课题的3名评审专家不可重复");
+        }
+
+        List<ExpertReviewTask> existingTasks = this.list(new LambdaQueryWrapper<ExpertReviewTask>()
+                .eq(ExpertReviewTask::getTopicId, topic.getId()));
+        boolean hasSubmittedOpinion = existingTasks.stream().anyMatch(task -> task.getStatus() != null && task.getStatus() == 2);
+        if (hasSubmittedOpinion) {
+            throw new BusinessException("已有专家提交评审意见，不能重新分配并覆盖历史评审任务");
+        }
 
         // 1. 清理已有评审任务 (如果有调整重新分配)
-        this.remove(new LambdaQueryWrapper<ExpertReviewTask>().eq(ExpertReviewTask::getTopicId, topic.getId()));
+        if (!existingTasks.isEmpty()) {
+            this.remove(new LambdaQueryWrapper<ExpertReviewTask>().eq(ExpertReviewTask::getTopicId, topic.getId()));
+        }
 
         // 2. 验证选定的三个专家
         for (Long expertId : request.getExpertIds()) {
@@ -90,6 +110,9 @@ public class ExpertReviewServiceImpl extends ServiceImpl<ExpertReviewTaskMapper,
             }
             if (topic.getOrgId() != null && topic.getOrgId().equals(expert.getOrgId())) {
                 throw new BusinessException("专家与课题主要研究人员单位相同，违反回避原则: " + expert.getRealName());
+            }
+            if (!matchesDirection(topic, expert)) {
+                throw new BusinessException("专家研究方向与课题方向不匹配: " + expert.getRealName());
             }
 
             // 创建分配任务
@@ -199,6 +222,19 @@ public class ExpertReviewServiceImpl extends ServiceImpl<ExpertReviewTaskMapper,
         log.info("系统自动补充专家成功: 课题[{}], 原专家[ID:{}], 替换专家[{}]", topic.getTitle(), rejectedTask.getExpertId(), replacementExpert.getRealName());
     }
 
+    @Scheduled(cron = "0 0 * * * *")
+    @Transactional(rollbackFor = Exception.class)
+    public void replaceTimedOutInvitations() {
+        LocalDateTime deadline = LocalDateTime.now().minusHours(invitationTimeoutHours);
+        List<ExpertReviewTask> timedOutTasks = this.list(new LambdaQueryWrapper<ExpertReviewTask>()
+                .eq(ExpertReviewTask::getInvitationStatus, 0)
+                .le(ExpertReviewTask::getCreateTime, deadline));
+        for (ExpertReviewTask task : timedOutTasks) {
+            log.info("专家评审邀请超时，系统尝试自动替换: 任务ID[{}], 专家ID[{}]", task.getId(), task.getExpertId());
+            autoReplaceExpert(task);
+        }
+    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void submitReviewOpinion(ExpertReviewOpinionRequest request, Long currentExpertId) {
@@ -256,7 +292,7 @@ public class ExpertReviewServiceImpl extends ServiceImpl<ExpertReviewTaskMapper,
                 if (topic != null) {
                     topic.setAverageScore(new java.math.BigDecimal(avgScore).setScale(2, java.math.RoundingMode.HALF_UP));
                     topic.setAutoPass(autoPass);
-                    topic.setStatus(6); // 评审结束
+                    topic.setStatus(6); // 评审结束，等待超管发布最终结果
                     topic.setFinalPass(0); // 待发布
                     topic.setUpdateTime(LocalDateTime.now());
                     topicDeclarationMapper.updateById(topic);
@@ -269,14 +305,38 @@ public class ExpertReviewServiceImpl extends ServiceImpl<ExpertReviewTaskMapper,
 
     @Override
     public List<ExpertReviewTask> listTasksForExpert(Long expertId) {
-        return this.list(new LambdaQueryWrapper<ExpertReviewTask>()
+        List<ExpertReviewTask> tasks = this.list(new LambdaQueryWrapper<ExpertReviewTask>()
                 .eq(ExpertReviewTask::getExpertId, expertId)
                 .in(ExpertReviewTask::getInvitationStatus, 0, 1)); // 只展示待确认和已接受的
+        for (ExpertReviewTask task : tasks) {
+            TopicDeclaration topic = topicDeclarationMapper.selectById(task.getTopicId());
+            if (topic != null) {
+                task.setTopicTitle(topic.getTitle());
+                task.setMajorDirection(topic.getCategoryId());
+                if (task.getInvitationStatus() != null && task.getInvitationStatus() == 1 && topic.getStatus() < 6) {
+                    task.setAnonymousPageUrl(topic.getAnonymousPageUrl());
+                }
+            }
+        }
+        return tasks;
     }
 
     @Override
     public List<ExpertReviewTask> listTasksForTopic(Long topicId) {
         return this.list(new LambdaQueryWrapper<ExpertReviewTask>()
                 .eq(ExpertReviewTask::getTopicId, topicId));
+    }
+
+    private boolean matchesDirection(TopicDeclaration topic, User expert) {
+        if (topic.getCategoryId() == null) {
+            return true;
+        }
+        if (topic.getCategoryId().equals(expert.getMajorDirection())) {
+            return true;
+        }
+        if (expert.getMinorDirections() == null || expert.getMinorDirections().trim().isEmpty()) {
+            return false;
+        }
+        return Arrays.asList(expert.getMinorDirections().split(",")).contains(String.valueOf(topic.getCategoryId()));
     }
 }

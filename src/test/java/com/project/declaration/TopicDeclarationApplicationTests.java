@@ -3,20 +3,25 @@ package com.project.declaration;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.project.declaration.common.BusinessException;
 import com.project.declaration.dto.AssignAuthRequest;
+import com.project.declaration.dto.ExpertAssignRequest;
 import com.project.declaration.dto.ExpertRespondRequest;
 import com.project.declaration.dto.ExpertReviewOpinionRequest;
+import com.project.declaration.dto.PublishResultRequest;
 import com.project.declaration.dto.RegisterOrgRequest;
 import com.project.declaration.entity.ExpertReviewTask;
 import com.project.declaration.entity.Institution;
+import com.project.declaration.entity.SysNotification;
 import com.project.declaration.entity.TopicDeclaration;
 import com.project.declaration.entity.User;
 import com.project.declaration.mapper.ExpertReviewTaskMapper;
 import com.project.declaration.mapper.InstitutionMapper;
 import com.project.declaration.mapper.SysNotificationMapper;
+import com.project.declaration.mapper.TopicAuditLogMapper;
 import com.project.declaration.mapper.TopicDeclarationMapper;
 import com.project.declaration.mapper.UserMapper;
 import com.project.declaration.service.impl.AuthServiceImpl;
 import com.project.declaration.service.impl.ExpertReviewServiceImpl;
+import com.project.declaration.service.impl.TopicDeclarationServiceImpl;
 import com.project.declaration.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +58,9 @@ class TopicDeclarationApplicationTests {
     private TopicDeclarationMapper topicDeclarationMapper;
 
     @Mock
+    private TopicAuditLogMapper topicAuditLogMapper;
+
+    @Mock
     private ExpertReviewTaskMapper expertReviewTaskMapper;
 
     @Mock
@@ -67,12 +75,16 @@ class TopicDeclarationApplicationTests {
     @InjectMocks
     private ExpertReviewServiceImpl expertReviewService;
 
+    @InjectMocks
+    private TopicDeclarationServiceImpl topicService;
+
     @BeforeEach
     void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
         // 通过反射手动将 mock mapper 注入 ServiceImpl 的 protected baseMapper 属性，解决 Mockito @InjectMocks 无法注入父类属性的问题
         setField(userService, "baseMapper", userMapper);
         setField(expertReviewService, "baseMapper", expertReviewTaskMapper);
+        setField(topicService, "baseMapper", topicDeclarationMapper);
     }
 
     private void setField(Object target, String fieldName, Object value) throws Exception {
@@ -201,5 +213,63 @@ class TopicDeclarationApplicationTests {
         request.setIsSubmit(1);
 
         assertThrows(BusinessException.class, () -> expertReviewService.submitReviewOpinion(request, expertId));
+    }
+
+    @Test
+    void testExpertCannotViewUnassignedTopic() {
+        TopicDeclaration topic = new TopicDeclaration();
+        topic.setId(500L);
+        topic.setTitle("未分配课题");
+        topic.setStatus(5);
+        topic.setCategoryId(1L);
+
+        when(topicDeclarationMapper.selectById(500L)).thenReturn(topic);
+        when(expertReviewTaskMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
+
+        assertThrows(BusinessException.class,
+                () -> topicService.getTopicDetail(500L, 10L, "EXPERT", null));
+    }
+
+    @Test
+    void testAssignExpertsRejectsDuplicateExperts() {
+        TopicDeclaration topic = new TopicDeclaration();
+        topic.setId(500L);
+        topic.setStatus(4);
+
+        when(topicDeclarationMapper.selectById(500L)).thenReturn(topic);
+
+        ExpertAssignRequest request = new ExpertAssignRequest();
+        request.setTopicId(500L);
+        request.setExpertIds(List.of(10L, 10L, 11L));
+
+        assertThrows(BusinessException.class, () -> expertReviewService.assignExperts(request));
+    }
+
+    @Test
+    void testPublishFinalResultMarksPublishedAndSendsNotification() {
+        TopicDeclaration topic = new TopicDeclaration();
+        topic.setId(500L);
+        topic.setTitle("待发布课题");
+        topic.setStatus(6);
+        topic.setDeclarerId(20L);
+        topic.setContactMobile("13900000000");
+
+        User declarer = new User();
+        declarer.setId(20L);
+        declarer.setMobile("13800000000");
+
+        when(topicDeclarationMapper.selectById(500L)).thenReturn(topic);
+        when(userMapper.selectById(20L)).thenReturn(declarer);
+
+        PublishResultRequest request = new PublishResultRequest();
+        request.setTopicId(500L);
+        request.setFinalPass(1);
+        request.setAdminOpinion("同意立项");
+        request.setAnnouncementContent("请加入项目群");
+
+        assertDoesNotThrow(() -> topicService.publishFinalResult(request, 1L));
+        assertEquals(8, topic.getStatus());
+        verify(topicDeclarationMapper, times(1)).updateById(topic);
+        verify(notificationMapper, times(1)).insert(any(SysNotification.class));
     }
 }

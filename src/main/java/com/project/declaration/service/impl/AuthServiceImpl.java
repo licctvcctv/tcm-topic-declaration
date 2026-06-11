@@ -159,7 +159,7 @@ public class AuthServiceImpl implements AuthService {
         expert.setRealName(request.getRealName());
         expert.setMobile(request.getMobile());
         expert.setRole("EXPERT");
-        expert.setStatus(1); // 专家默认直接启用
+        expert.setStatus(0); // 专家注册后需超级管理员审核启用
         expert.setExpertSignature(request.getExpertSignature());
         expert.setMajorDirection(request.getMajorDirection());
         expert.setMinorDirections(request.getMinorDirections());
@@ -177,7 +177,7 @@ public class AuthServiceImpl implements AuthService {
         notification.setCreateTime(LocalDateTime.now());
         notificationMapper.insert(notification);
 
-        log.info("评审专家注册成功 & 发送虚拟邀请短信: 专家[{}], 手机号[{}]", expert.getRealName(), expert.getMobile());
+        log.info("评审专家注册成功，等待超级管理员审核 & 记录虚拟邀请短信: 专家[{}], 手机号[{}]", expert.getRealName(), expert.getMobile());
     }
 
     @Override

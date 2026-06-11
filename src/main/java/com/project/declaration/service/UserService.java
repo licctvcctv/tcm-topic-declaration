@@ -12,4 +12,5 @@ public interface UserService extends IService<User> {
     void assignDeclarationAuth(AssignAuthRequest request, Long currentOrgId);
     List<User> listInstitutionUsers(Long orgId);
     void adjustQuota(Long orgId, Integer newQuota);
+    void auditSystemUser(AuditUserRequest request, String role);
 }

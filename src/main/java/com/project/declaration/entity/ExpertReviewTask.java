@@ -1,6 +1,7 @@
 package com.project.declaration.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -23,4 +24,13 @@ public class ExpertReviewTask {
     private LocalDateTime createTime;
     private LocalDateTime replyTime;
     private LocalDateTime submitTime;
+
+    @TableField(exist = false)
+    private String topicTitle;
+
+    @TableField(exist = false)
+    private Long majorDirection;
+
+    @TableField(exist = false)
+    private String anonymousPageUrl;
 }

@@ -1,6 +1,6 @@
 # 🌿 TCM Topic Declaration Platform
 
-**中医药自选课题申报管理平台** — 基于 Spring Boot 3.3.4 的全栈课题申报管理系统，覆盖从机构注册、课题填报、两级审核、专家双盲评审到结果发布的全流程闭环。
+**中医药自选课题申报管理平台** — 基于 Spring Boot 3.3.4 的全栈课题申报管理系统，覆盖机构注册、课题填报、两级审核、专家双盲评审、结果发布和通过课题导出。
 
 ---
 
@@ -35,10 +35,11 @@ source src/main/resources/db/schema.sql
 ### 2. 启动服务
 
 ```bash
-DB_PASSWORD= FILE_UPLOAD_DIR=/tmp/tcm-uploads ./mvnw spring-boot:run
+JWT_SECRET=please-change-this-secret-at-least-32-chars DB_PASSWORD= FILE_UPLOAD_DIR=/tmp/tcm-uploads ./mvnw spring-boot:run
 ```
 
 > 如果 MySQL 设置了密码，替换 `DB_PASSWORD=` 为 `DB_PASSWORD=your_password`。
+> `JWT_SECRET` 必须提供，且长度不少于 32 个字符；生产环境必须使用独立随机值。
 
 ### 3. 访问
 
@@ -55,7 +56,7 @@ DB_PASSWORD= FILE_UPLOAD_DIR=/tmp/tcm-uploads ./mvnw spring-boot:run
 
 | 角色 | 职责 |
 |------|------|
-| **SUPER_ADMIN** (超级管理员) | 管理申报周期、审批机构、格式初审、指派专家、发布结果 |
+| **SUPER_ADMIN** (超级管理员) | 管理申报周期、审批机构/专家、格式初审、指派专家、发布结果 |
 | **ORG_ADMIN** (机构管理员) | 审核本机构用户、审核本机构课题、管理名额 |
 | **NORMAL_USER** (申报人) | 填报课题、上传附件、查看审核进度 |
 | **EXPERT** (评审专家) | 接受/拒绝评审任务、打分、提交评审意见 |
@@ -80,8 +81,9 @@ DB_PASSWORD= FILE_UPLOAD_DIR=/tmp/tcm-uploads ./mvnw spring-boot:run
 | 3 | 机构退回 — 机构审核不通过，退回修改 |
 | 4 | 待专家分配 — 格式通过，等待超管指派专家 |
 | 5 | 专家评审中 — 已指派专家，等待打分 |
-| 6 | 评审结束 — 已发布最终结果 |
+| 6 | 评审结束待发布 — 专家意见已提交完毕，等待超管发布 |
 | 7 | 格式退回 — 超管格式审核不通过，终止 |
+| 8 | 已发布 — 超管已发布最终立项结果 |
 
 ---
 
@@ -93,7 +95,7 @@ DB_PASSWORD= FILE_UPLOAD_DIR=/tmp/tcm-uploads ./mvnw spring-boot:run
 |------|------|------|
 | POST | `/api/auth/login` | 登录获取 JWT Token |
 | POST | `/api/auth/register-user` | 申报人注册 |
-| POST | `/api/auth/register-expert` | 专家注册 |
+| POST | `/api/auth/register-expert` | 专家注册，注册后需超管审核启用 |
 | POST | `/api/auth/register-org` | 机构注册 |
 | GET  | `/api/auth/active-orgs` | 获取已激活机构列表 |
 
@@ -101,19 +103,22 @@ DB_PASSWORD= FILE_UPLOAD_DIR=/tmp/tcm-uploads ./mvnw spring-boot:run
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | `/api/topics/create` | 创建课题 |
-| PUT  | `/api/topics/update` | 更新课题 |
-| POST | `/api/topics/submit` | 提交课题 |
+| POST | `/api/topics/save-submit` | 保存草稿或提交课题 |
 | GET  | `/api/topics/my` | 我的课题列表 |
 | GET  | `/api/topics/detail/{id}` | 课题详情 |
+| GET  | `/api/topics/categories` | 启用中的课题分类 |
+| GET  | `/api/topics/active-period` | 当前启用申报周期 |
+| GET  | `/api/topics/is-open` | 申报通道是否开放 |
 
-### 机构管理 (`/api/institutions/**`)
+### 机构管理 (`/api/institution/**`)
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET  | `/api/institutions/org-topics` | 机构课题列表 |
-| POST | `/api/institutions/audit-topic` | 机构审核课题 |
-| POST | `/api/institutions/assign-auth` | 分配申报名额 |
+| GET  | `/api/institution/users` | 本机构用户列表 |
+| POST | `/api/institution/users/audit` | 审核或禁用本机构用户 |
+| POST | `/api/institution/users/assign-auth` | 分配申报名额 |
+| GET  | `/api/institution/topics` | 本机构课题列表 |
+| POST | `/api/institution/topics/audit` | 机构审核课题 |
 
 ### 专家 (`/api/expert/**`)
 
@@ -121,26 +126,30 @@ DB_PASSWORD= FILE_UPLOAD_DIR=/tmp/tcm-uploads ./mvnw spring-boot:run
 |------|------|------|
 | GET  | `/api/expert/tasks` | 我的评审任务 |
 | POST | `/api/expert/respond` | 接受/拒绝评审 |
-| POST | `/api/expert/score` | 提交评分 |
-| POST | `/api/expert/save-score` | 暂存评分 |
+| POST | `/api/expert/opinion` | 暂存或提交评分意见 |
 
 ### 超级管理员 (`/api/admin/**`)
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | `/api/admin/audit-org` | 审批机构注册 |
-| POST | `/api/admin/audit-user` | 审批用户 |
-| POST | `/api/admin/audit-topic-format` | 格式初审 |
-| POST | `/api/admin/assign-experts` | 指派专家 |
-| POST | `/api/admin/append-expert` | 追加第二轮专家 |
-| POST | `/api/admin/publish-result` | 发布评审结果 |
-| GET  | `/api/admin/export-csv` | 导出 CSV 汇总 |
+| GET  | `/api/admin/orgs` | 机构列表 |
+| POST | `/api/admin/orgs/audit` | 审批机构注册 |
+| POST | `/api/admin/orgs/quota` | 调整机构申报名额 |
+| GET  | `/api/admin/experts` | 专家列表，可按状态筛选 |
+| POST | `/api/admin/experts/audit` | 审核或禁用专家 |
+| POST | `/api/admin/categories` | 新增或更新课题分类 |
+| POST | `/api/admin/categories/{id}/disable` | 禁用课题分类 |
+| POST | `/api/admin/topics/audit` | 格式初审 |
+| POST | `/api/admin/experts/assign` | 指派专家 |
+| POST | `/api/admin/topics/add-second-expert` | 追加第二轮专家 |
+| POST | `/api/admin/topics/publish-result` | 发布评审结果 |
+| GET  | `/api/admin/topics/export-csv` | 导出已立项通过课题 CSV |
 
 ### 文件 (`/api/files/**`)
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | `/api/files/upload` | 上传文件 (PDF/DOCX/图片) |
+| POST | `/api/files/upload` | 上传文件 (PDF/DOCX/图片)，注册材料上传允许匿名 |
 | GET  | `/api/files/download/{filename}` | 下载文件 (含权限校验) |
 
 ---
@@ -180,8 +189,9 @@ src/main/resources/
 | `DB_USERNAME` | `root` | 数据库用户 |
 | `DB_PASSWORD` | `root_password` | 数据库密码 |
 | `FILE_UPLOAD_DIR` | `./uploads` | 文件上传保存路径 |
-| `JWT_SECRET` | (内置默认值) | JWT 签名密钥 |
+| `JWT_SECRET` | 无，必填 | JWT 签名密钥，至少 32 个字符 |
 | `JWT_EXPIRATION` | `86400` | Token 过期时间 (秒) |
+| `REVIEW_INVITATION_TIMEOUT_HOURS` | `72` | 专家邀请超时自动替换小时数 |
 
 ---
 
@@ -197,7 +207,7 @@ mysql -u root < src/main/resources/db/schema.sql
 ./mvnw clean test
 
 # 3. 启动
-DB_PASSWORD= FILE_UPLOAD_DIR=/tmp/tcm-uploads ./mvnw spring-boot:run
+JWT_SECRET=please-change-this-secret-at-least-32-chars DB_PASSWORD= FILE_UPLOAD_DIR=/tmp/tcm-uploads ./mvnw spring-boot:run
 ```
 
 ### 静态资源修改

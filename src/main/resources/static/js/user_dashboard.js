@@ -102,8 +102,8 @@ async function renderDeclarerTable() {
             const tr = document.createElement('tr');
             const statusBadge = getStatusBadge(t.status);
             const scoreText = t.status === 7 ? '-' : (t.status >= 6 ? (t.averageScore !== null ? t.averageScore.toFixed(2) : '未打分') : (t.status >= 5 ? '评审中' : '-'));
-            let finalResult = t.status === 6 && t.finalPass === 1 ? '立项通过' : (t.status === 6 && t.finalPass === 2 ? '立项不通过' : (t.status === 7 ? '格式审核不通过' : (t.status >= 6 ? '待公布' : '未公布')));
-            if (t.status === 6 && t.finalPass === 1 && t.announcementContent) {
+            let finalResult = t.status === 8 && t.finalPass === 1 ? '立项通过' : (t.status === 8 && t.finalPass === 2 ? '立项不通过' : (t.status === 7 ? '格式审核不通过' : (t.status >= 6 ? '待发布' : '未发布')));
+            if (t.status === 8 && t.finalPass === 1 && t.announcementContent) {
                 finalResult += `<br><span class="badge badge-info" style="cursor:pointer;margin-top:4px;" onclick="alert('${t.announcementContent.replace(/'/g, "\\'")}')">查看公告</span>`;
             }
 
@@ -134,8 +134,9 @@ function getStatusBadge(status) {
         case 3: return '<span class="badge badge-error">退回修改</span>';
         case 4: return '<span class="badge badge-info">待分配专家</span>';
         case 5: return '<span class="badge badge-pending">专家评审中</span>';
-        case 6: return '<span class="badge badge-success">评审结束</span>';
+        case 6: return '<span class="badge badge-draft">待发布结果</span>';
         case 7: return '<span class="badge badge-error">格式审核不通过</span>';
+        case 8: return '<span class="badge badge-success">结果已发布</span>';
         default: return '<span class="badge badge-draft">未知</span>';
     }
 }

@@ -2,6 +2,7 @@ package com.project.declaration.controller;
 
 import com.project.declaration.common.Result;
 import com.project.declaration.dto.AuditOrgRequest;
+import com.project.declaration.dto.AuditUserRequest;
 import com.project.declaration.dto.ExpertAssignRequest;
 import com.project.declaration.dto.PeriodConfigRequest;
 import com.project.declaration.dto.PublishResultRequest;
@@ -25,6 +26,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -102,6 +104,23 @@ public class AdminController {
         return Result.success(expertReviewService.recommendExpertsForTopic(topicId));
     }
 
+    @GetMapping("/experts")
+    public Result<List<User>> listExperts(@RequestParam(required = false) Integer status) {
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<User> query =
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<User>()
+                        .eq(User::getRole, "EXPERT");
+        if (status != null) {
+            query.eq(User::getStatus, status);
+        }
+        return Result.success(userService.list(query));
+    }
+
+    @PostMapping("/experts/audit")
+    public Result<String> auditExpert(@Valid @RequestBody AuditUserRequest request) {
+        userService.auditSystemUser(request, "EXPERT");
+        return Result.success(request.getStatus() == 1 ? "专家账号已启用" : "专家账号已禁用");
+    }
+
     @PostMapping("/experts/assign")
     public Result<String> assignExperts(@Valid @RequestBody ExpertAssignRequest request) {
         expertReviewService.assignExperts(request);
@@ -111,6 +130,35 @@ public class AdminController {
     @GetMapping("/reviews")
     public Result<List<ExpertReviewTask>> getReviewsForTopic(@RequestParam Long topicId) {
         return Result.success(expertReviewService.listTasksForTopic(topicId));
+    }
+
+    @PostMapping("/categories")
+    public Result<String> saveCategory(@RequestBody TopicCategory category) {
+        if (category.getName() == null || category.getName().trim().isEmpty()) {
+            return Result.error(400, "分类名称不能为空");
+        }
+        if (category.getParentId() == null) {
+            category.setParentId(0L);
+        }
+        if (category.getStatus() == null) {
+            category.setStatus(1);
+        }
+        if (category.getId() == null) {
+            category.setCreateTime(LocalDateTime.now());
+        }
+        categoryService.saveOrUpdate(category);
+        return Result.success("课题分类保存成功");
+    }
+
+    @PostMapping("/categories/{id}/disable")
+    public Result<String> disableCategory(@PathVariable Long id) {
+        TopicCategory category = categoryService.getById(id);
+        if (category == null) {
+            return Result.error(404, "课题分类不存在");
+        }
+        category.setStatus(0);
+        categoryService.updateById(category);
+        return Result.success("课题分类已禁用");
     }
 
     @PostMapping("/topics/publish-result")
@@ -136,7 +184,8 @@ public class AdminController {
         response.getWriter().write("课题名称,研究方向,申报单位,平均得分,推荐人数/总人数,立项通过率,系统建议,最终结论,联系人\n");
         
         List<TopicDeclaration> list = topicService.list(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<TopicDeclaration>()
-                .in(TopicDeclaration::getStatus, 5, 6));
+                .eq(TopicDeclaration::getStatus, 8)
+                .eq(TopicDeclaration::getFinalPass, 1));
         
         for (TopicDeclaration topic : list) {
             Institution inst = institutionService.getById(topic.getOrgId());
@@ -158,8 +207,7 @@ public class AdminController {
             String suggest = passRate >= 50 ? "建议立项" : "建议不予立项";
             
             String finalResult;
-            if (topic.getStatus() == 5) finalResult = "评审中";
-            else if (topic.getFinalPass() != null && topic.getFinalPass() == 1) finalResult = "立项通过";
+            if (topic.getFinalPass() != null && topic.getFinalPass() == 1) finalResult = "立项通过";
             else if (topic.getFinalPass() != null && topic.getFinalPass() == 2) finalResult = "立项不通过";
             else if (topic.getStatus() == 7) finalResult = "格式审核不通过";
             else finalResult = "未发布";

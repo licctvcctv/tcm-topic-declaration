@@ -51,7 +51,7 @@ public class TopicDeclarationServiceImpl extends ServiceImpl<TopicDeclarationMap
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void saveOrSubmitTopic(TopicDeclarationRequest request, Long declarerId, Long orgId) {
+    public synchronized void saveOrSubmitTopic(TopicDeclarationRequest request, Long declarerId, Long orgId) {
         // 1. 校验申报周期是否开启
         if (!periodService.isDeclarationOpen()) {
             throw new BusinessException("课题申报通道当前处于关闭状态（不在开放期内）");
@@ -95,7 +95,7 @@ public class TopicDeclarationServiceImpl extends ServiceImpl<TopicDeclarationMap
             Long submittedCount = this.count(new LambdaQueryWrapper<TopicDeclaration>()
                     .eq(TopicDeclaration::getOrgId, orgId)
                     .ne(request.getId() != null, TopicDeclaration::getId, request.getId())
-                    .in(TopicDeclaration::getStatus, 1, 2, 4, 5, 6));
+                    .in(TopicDeclaration::getStatus, 1, 2, 4, 5, 6, 8));
 
             if (submittedCount >= inst.getQuota()) {
                 throw new BusinessException(String.format("提交失败，本机构已提交的课题数量（%d个）已达到当年上限（%d个）", submittedCount, inst.getQuota()));
@@ -210,6 +210,14 @@ public class TopicDeclarationServiceImpl extends ServiceImpl<TopicDeclarationMap
             }
             return topic;
         } else if ("EXPERT".equals(currentRole)) {
+            Long taskCount = expertReviewTaskMapper.selectCount(new LambdaQueryWrapper<ExpertReviewTask>()
+                    .eq(ExpertReviewTask::getTopicId, topic.getId())
+                    .eq(ExpertReviewTask::getExpertId, currentUserId)
+                    .in(ExpertReviewTask::getInvitationStatus, 0, 1));
+            if (taskCount == 0) {
+                throw new BusinessException("无权查看未分配给您的评审课题");
+            }
+
             TopicDeclaration masked = new TopicDeclaration();
             masked.setId(topic.getId());
             masked.setTitle(topic.getTitle());
@@ -219,7 +227,7 @@ public class TopicDeclarationServiceImpl extends ServiceImpl<TopicDeclarationMap
             masked.setCreateTime(topic.getCreateTime());
             
             // 评审结束后专家只能查看自己的评审意见，无法再查看课题《活页》内容
-            if (topic.getStatus() == 6) {
+            if (topic.getStatus() >= 6) {
                 masked.setAnonymousPageUrl(null); // 评审已结束，设为空阻止查看
             } else {
                 masked.setAnonymousPageUrl(topic.getAnonymousPageUrl());
@@ -256,11 +264,28 @@ public class TopicDeclarationServiceImpl extends ServiceImpl<TopicDeclarationMap
         topic.setFinalPass(request.getFinalPass());
         topic.setAdminPublishOpinion(request.getAdminOpinion());
         topic.setPublishTime(LocalDateTime.now());
+        topic.setStatus(8);
         if (request.getFinalPass() == 1) {
             topic.setAnnouncementContent(request.getAnnouncementContent());
+        } else {
+            topic.setAnnouncementContent(null);
         }
         topic.setUpdateTime(LocalDateTime.now());
         this.updateById(topic);
+
+        User declarer = userMapper.selectById(topic.getDeclarerId());
+        if (declarer != null) {
+            SysNotification notification = new SysNotification();
+            notification.setReceiverMobile(topic.getContactMobile() != null ? topic.getContactMobile() : declarer.getMobile());
+            notification.setType("REVIEW_RESULT");
+            notification.setContent(String.format("【课题评审结果】您申报的课题“%s”最终结果为：%s。%s",
+                    topic.getTitle(),
+                    request.getFinalPass() == 1 ? "立项通过" : "立项不通过",
+                    request.getAdminOpinion() == null ? "" : request.getAdminOpinion()));
+            notification.setSendStatus(1);
+            notification.setCreateTime(LocalDateTime.now());
+            notificationMapper.insert(notification);
+        }
 
         TopicAuditLog logEntry = new TopicAuditLog();
         logEntry.setTopicId(topic.getId());
@@ -281,6 +306,9 @@ public class TopicDeclarationServiceImpl extends ServiceImpl<TopicDeclarationMap
         if (topic.getStatus() != 5 && topic.getStatus() != 6) {
             throw new BusinessException("该课题当前状态不支持追加第二次评审专家");
         }
+        if (topic.getFinalPass() != null && topic.getFinalPass() != 0) {
+            throw new BusinessException("最终结果已发布，不能再追加第二次评审专家");
+        }
 
         List<ExpertReviewTask> existing = expertReviewTaskMapper.selectList(
                 new LambdaQueryWrapper<ExpertReviewTask>().eq(ExpertReviewTask::getTopicId, topicId));
@@ -297,6 +325,9 @@ public class TopicDeclarationServiceImpl extends ServiceImpl<TopicDeclarationMap
         if (topic.getOrgId() != null && topic.getOrgId().equals(expert.getOrgId())) {
             throw new BusinessException("专家与课题主要研究人员单位相同，违反回避原则: " + expert.getRealName());
         }
+        if (!matchesDirection(topic, expert)) {
+            throw new BusinessException("专家研究方向与课题方向不匹配: " + expert.getRealName());
+        }
 
         ExpertReviewTask task = new ExpertReviewTask();
         task.setTopicId(topicId);
@@ -308,6 +339,7 @@ public class TopicDeclarationServiceImpl extends ServiceImpl<TopicDeclarationMap
 
         if (topic.getStatus() == 6) {
             topic.setStatus(5);
+            topic.setFinalPass(0);
             topic.setUpdateTime(LocalDateTime.now());
             this.updateById(topic);
         }
@@ -320,5 +352,18 @@ public class TopicDeclarationServiceImpl extends ServiceImpl<TopicDeclarationMap
         notification.setSendStatus(1);
         notification.setCreateTime(LocalDateTime.now());
         notificationMapper.insert(notification);
+    }
+
+    private boolean matchesDirection(TopicDeclaration topic, User expert) {
+        if (topic.getCategoryId() == null) {
+            return true;
+        }
+        if (topic.getCategoryId().equals(expert.getMajorDirection())) {
+            return true;
+        }
+        if (expert.getMinorDirections() == null || expert.getMinorDirections().trim().isEmpty()) {
+            return false;
+        }
+        return java.util.Arrays.asList(expert.getMinorDirections().split(",")).contains(String.valueOf(topic.getCategoryId()));
     }
 }

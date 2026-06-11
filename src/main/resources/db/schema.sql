@@ -36,7 +36,10 @@ CREATE TABLE IF NOT EXISTS `tb_user` (
   `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
-  KEY `idx_org_id` (`org_id`)
+  KEY `idx_org_id` (`org_id`),
+  CONSTRAINT `chk_user_role` CHECK (`role` IN ('SUPER_ADMIN','ORG_ADMIN','NORMAL_USER','EXPERT')),
+  CONSTRAINT `chk_user_status` CHECK (`status` IN (0,1,2)),
+  CONSTRAINT `chk_user_declaration_auth` CHECK (`has_declaration_auth` IN (0,1))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
 -- 3. 课题分类表
@@ -46,7 +49,8 @@ CREATE TABLE IF NOT EXISTS `tb_topic_category` (
   `parent_id` BIGINT NOT NULL DEFAULT 0 COMMENT '父分类ID',
   `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
   `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_topic_category_name_parent` (`name`, `parent_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课题分类表';
 
 -- 4. 课题申报表
@@ -60,7 +64,7 @@ CREATE TABLE IF NOT EXISTS `tb_topic_declaration` (
   `contact_mobile` VARCHAR(20) NOT NULL COMMENT '接收通知的手机号码',
   `task_book_url` VARCHAR(500) NOT NULL COMMENT '《任务书》文件路径',
   `anonymous_page_url` VARCHAR(500) NOT NULL COMMENT '《活页》文件路径 (用于专家评审)',
-  `status` TINYINT NOT NULL DEFAULT 0 COMMENT '状态：0-草稿，1-已提交待机构审核，2-机构审核通过待超管格式审核，3-退回修改，4-超管审核通过（待分配专家），5-评审中，6-评审结束',
+  `status` TINYINT NOT NULL DEFAULT 0 COMMENT '状态：0-草稿，1-待机构审核，2-待格式审核，3-机构退回，4-待专家分配，5-评审中，6-待发布，7-格式审核不通过，8-已发布',
   `average_score` DECIMAL(5,2) DEFAULT NULL COMMENT '评审平均分',
   `auto_pass` TINYINT DEFAULT NULL COMMENT '系统建议立项：0-不通过，1-通过',
   `final_pass` TINYINT DEFAULT NULL COMMENT '超管最终立项发布状态：0-未发布，1-立项通过，2-立项不通过',
@@ -72,7 +76,10 @@ CREATE TABLE IF NOT EXISTS `tb_topic_declaration` (
   PRIMARY KEY (`id`),
   KEY `idx_org_id` (`org_id`),
   KEY `idx_declarer_id` (`declarer_id`),
-  KEY `idx_category_id` (`category_id`)
+  KEY `idx_category_id` (`category_id`),
+  CONSTRAINT `chk_topic_status` CHECK (`status` IN (0,1,2,3,4,5,6,7,8)),
+  CONSTRAINT `chk_topic_auto_pass` CHECK (`auto_pass` IS NULL OR `auto_pass` IN (0,1)),
+  CONSTRAINT `chk_topic_final_pass` CHECK (`final_pass` IS NULL OR `final_pass` IN (0,1,2))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课题申报表';
 
 -- 5. 课题审核日志表
@@ -102,7 +109,11 @@ CREATE TABLE IF NOT EXISTS `tb_expert_review_task` (
   `submit_time` DATETIME DEFAULT NULL COMMENT '意见提交时间',
   PRIMARY KEY (`id`),
   KEY `idx_topic_id` (`topic_id`),
-  KEY `idx_expert_id` (`expert_id`)
+  KEY `idx_expert_id` (`expert_id`),
+  UNIQUE KEY `uk_review_topic_expert` (`topic_id`, `expert_id`),
+  CONSTRAINT `chk_review_invitation_status` CHECK (`invitation_status` IN (0,1,2,3)),
+  CONSTRAINT `chk_review_recommend_result` CHECK (`recommend_result` IS NULL OR `recommend_result` IN (1,2)),
+  CONSTRAINT `chk_review_status` CHECK (`status` IN (0,1,2))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='专家评审任务表';
 
 -- 7. 申报周期配置表
@@ -128,7 +139,7 @@ CREATE TABLE IF NOT EXISTS `tb_sys_notification` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='虚拟短信/通知历史表';
 
 -- 9. 初始数据填充 (主要研究方向/课题分类)
-INSERT INTO `tb_topic_category` (`name`, `parent_id`, `status`) VALUES
+INSERT IGNORE INTO `tb_topic_category` (`name`, `parent_id`, `status`) VALUES
 ('医保支付方式改革', 0, 1),
 ('医疗服务价格改革', 0, 1),
 ('医保目录和支付标准研究', 0, 1),
@@ -145,5 +156,5 @@ INSERT INTO `tb_topic_category` (`name`, `parent_id`, `status`) VALUES
 ('其他', 0, 1);
 
 -- 10. 初始化一个超级管理员账号 (账号: admin, 密码明文: admin123, 角色: SUPER_ADMIN)
-INSERT INTO `tb_user` (`username`, `password`, `real_name`, `mobile`, `email`, `role`, `status`) VALUES
+INSERT IGNORE INTO `tb_user` (`username`, `password`, `real_name`, `mobile`, `email`, `role`, `status`) VALUES
 ('admin', '$2a$10$l5A5DS/0.rTiJl3kABPxtuCoan3Djr.DKn.g6VEBesS.Fvy5looVm', '系统超级管理员', '18888888888', 'admin@chinesemedicine.org', 'SUPER_ADMIN', 1);

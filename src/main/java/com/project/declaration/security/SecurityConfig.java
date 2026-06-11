@@ -42,6 +42,7 @@ public class SecurityConfig {
                     "/api/auth/register-org",
                     "/api/auth/register-expert",
                     "/api/auth/register-user",
+                    "/api/files/upload",
                     "/api/auth/active-orgs",
                     "/api/topics/active-period",
                     "/api/topics/categories",

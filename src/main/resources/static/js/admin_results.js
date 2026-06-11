@@ -5,7 +5,7 @@ async function renderResultsTable() {
         const tbody = document.getElementById('super-results-body');
         tbody.innerHTML = '';
 
-        const finishedList = list.filter(t => t.status === 5 || t.status === 6);
+        const finishedList = list.filter(t => t.status === 5 || t.status === 6 || t.status === 8);
         if (finishedList.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">暂无专家评审完结的课题成果</td></tr>';
             return;
@@ -25,8 +25,8 @@ async function renderResultsTable() {
             let pubText = ''; let pubBadge = '';
             if (t.status === 5) { pubText = '评审中'; pubBadge = 'badge-pending'; }
             else if (t.status === 6 && (!t.finalPass || t.finalPass === 0)) { pubText = '未发布结果'; pubBadge = 'badge-draft'; }
-            else if (t.status === 6 && t.finalPass === 1) { pubText = '已立项公布'; pubBadge = 'badge-success'; }
-            else if (t.status === 6 && t.finalPass === 2) { pubText = '已公布不予立项'; pubBadge = 'badge-error'; }
+            else if (t.status === 8 && t.finalPass === 1) { pubText = '已发布立项'; pubBadge = 'badge-success'; }
+            else if (t.status === 8 && t.finalPass === 2) { pubText = '已发布不予立项'; pubBadge = 'badge-error'; }
             else if (t.status === 7) { pubText = '格式审核不通过'; pubBadge = 'badge-error'; }
 
             let opt = t.status === 6 && (!t.finalPass || t.finalPass === 0) ? `
@@ -77,7 +77,7 @@ async function openAddSecondModal(topicId, title, categoryId) {
                         <input type="radio" name="second-expert-radio" value="${exp.id}">
                         <strong>${exp.realName}</strong> (${categoriesMap[exp.majorDirection]})
                     </span>
-                    <span style="font-size:0.75rem; color:var(--gray);">当前评审任务数: ${exp.limitDeclaration || 0}</span>
+                    <span style="font-size:0.75rem; color:var(--gray);">专家ID: ${exp.id}</span>
                 </label>
             `;
             listContainer.appendChild(item);
@@ -134,7 +134,7 @@ async function confirmPublishResult() {
     }
 
     try {
-        const msg = await api.admin.publishFinalResult({ topicId: parseInt(topicId), finalPass, finalOpinion: opinion, announcement });
+        const msg = await api.admin.publishFinalResult({ topicId: parseInt(topicId), finalPass, adminOpinion: opinion, announcementContent: announcement });
         showToast(msg, 'success');
         closeModal('publish-result-modal');
         switchSuperTab('results');

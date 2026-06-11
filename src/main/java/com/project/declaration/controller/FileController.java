@@ -133,7 +133,7 @@ public class FileController {
                     hasAccess = true;
                 }
                 else if ("EXPERT".equals(currentUser.getRole()) && fileUrl.equals(topic.getAnonymousPageUrl())) {
-                    if (topic.getStatus() != 6) {
+                    if (topic.getStatus() < 6) {
                         Long taskCount = expertReviewTaskMapper.selectCount(
                                 new LambdaQueryWrapper<ExpertReviewTask>()
                                         .eq(ExpertReviewTask::getTopicId, topic.getId())
@@ -152,7 +152,11 @@ public class FileController {
         }
 
         try {
-            Path filePath = Paths.get(uploadDir).resolve(filename).normalize();
+            Path basePath = Paths.get(uploadDir).toAbsolutePath().normalize();
+            Path filePath = basePath.resolve(filename).normalize();
+            if (!filePath.startsWith(basePath)) {
+                return ResponseEntity.status(403).build();
+            }
             Resource resource = new UrlResource(filePath.toUri());
             if (resource.exists()) {
                 String contentType = "application/octet-stream";
