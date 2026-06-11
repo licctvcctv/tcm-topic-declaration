@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中医药自选课题申报管理平台 - 系统管理员</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/components.css">
+</head>
+<body>
+    <header>
+        <a class="logo-area" href="/">
+            <div class="logo-icon">
+                <svg viewBox="0 0 64 64" style="width:28px; height:28px; display:block;" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="32" cy="32" r="30" stroke="var(--primary)" stroke-width="2" fill="none" opacity="0.2"/>
+                    <circle cx="32" cy="32" r="27" stroke="var(--accent)" stroke-width="1.2" fill="none" stroke-dasharray="3 2" opacity="0.6"/>
+                    <path d="M32 12 C25 12 23 18 28 24 C23 30 19 36 21 46 C24 53 32 53 32 53 Z" fill="var(--primary)"/>
+                    <path d="M32 12 C38 12 40 18 36 24 C41 30 45 36 43 46 C40 53 32 53 32 53 Z" fill="var(--accent)"/>
+                    <path d="M32 12 C28 18 36 24 32 30 C28 36 36 42 32 53" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <circle cx="37" cy="40" r="2.5" fill="#ffffff" opacity="0.9"/><circle cx="27" cy="18" r="1.5" fill="#ffffff" opacity="0.9"/>
+                </svg>
+            </div>
+            <div class="logo-text"><h1>中医药课题申报平台</h1><p>SUPER ADMIN</p></div>
+        </a>
+        <div class="header-actions">
+            <div class="user-profile-widget" id="user-profile-box">
+                <div class="user-avatar" id="profile-avatar">-</div><span id="profile-name">加载中...</span>
+                <button onclick="api.auth.logout()" class="logout-btn">安全退出</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="menu-item active" id="super-btn-period" onclick="switchSuperTab('period')">
+                    <a href="#"><svg class="icon-svg icon-btn" viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 申报周期维护</a>
+                </li>
+                <li class="menu-item" id="super-btn-orgs" onclick="switchSuperTab('orgs')">
+                    <a href="#"><svg class="icon-svg icon-btn" viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2;"><path d="M3 21h18M3 7V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2M5 7h14v14H5z"/><path d="M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"/></svg> 机构审批 & 名额</a>
+                </li>
+                <li class="menu-item" id="super-btn-format" onclick="switchSuperTab('format')">
+                    <a href="#"><svg class="icon-svg icon-btn" viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> 课题格式初审</a>
+                </li>
+                <li class="menu-item" id="super-btn-experts" onclick="switchSuperTab('experts')">
+                    <a href="#"><svg class="icon-svg icon-btn" viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> 专家指派 & 进度</a>
+                </li>
+                <li class="menu-item" id="super-btn-results" onclick="switchSuperTab('results')">
+                    <a href="#"><svg class="icon-svg icon-btn" viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2;"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg> 评审结果 & 发布</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="viewport">
+            <div class="panel active">
+                <div class="panel-header">
+                    <div class="panel-title"><h2>超级管理员管理中心</h2><p>管理全局申报周期、审核申报机构、执行格式初审、智能指派专家以及发布最终评审立项结果。</p></div>
+                </div>
+
+                <!-- 1. 申报时间周期子标签 -->
+                <div id="super-tab-period" class="super-tab-content">
+                    <form onsubmit="savePeriodConfig(event)" style="max-width: 600px;">
+                        <div class="form-group"><label class="form-label">申报年份 *</label><input type="number" class="form-control" id="period-year" required value="2026"></div>
+                        <div class="form-group"><label class="form-label">申报开始时间 *</label><input type="datetime-local" class="form-control" id="period-start" required></div>
+                        <div class="form-group"><label class="form-label">申报截止时间 *</label><input type="datetime-local" class="form-control" id="period-end" required></div>
+                        <div class="form-group"><label class="form-label">填报注意事项配置</label><textarea class="form-control" id="period-instructions-input" rows="4" placeholder="课题申报注意事项内容将展示在前台填报页面..."></textarea></div>
+                        <div class="form-group"><label class="form-label">周期启用状态</label><select class="form-control" id="period-status"><option value="1">启用申报通道</option><option value="0">关闭申报通道</option></select></div>
+                        <button type="submit" class="btn btn-primary">保存全局配置</button>
+                    </form>
+                </div>
+
+                <!-- 2. 机构审核与额度管理 -->
+                <div id="super-tab-orgs" class="super-tab-content" style="display: none;">
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>单位名称</th><th>省份</th><th>地址</th><th>资质证书</th><th>认证状态</th><th>申报名额上限</th><th>操作</th></tr></thead>
+                            <tbody id="super-orgs-body"><tr><td colspan="7" style="text-align:center;">数据载入中...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 3. 格式初审 -->
+                <div id="super-tab-format" class="super-tab-content" style="display: none;">
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>课题名称</th><th>申报单位</th><th>主要方向</th><th>附件下载</th><th>当前状态</th><th>操作</th></tr></thead>
+                            <tbody id="super-format-body"><tr><td colspan="6" style="text-align:center;">数据载入中...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 4. 专家指派与智能推荐 -->
+                <div id="super-tab-experts" class="super-tab-content" style="display: none;">
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>课题名称</th><th>主要方向</th><th>回避单位</th><th>已指派情况(接受/总数)</th><th>操作</th></tr></thead>
+                            <tbody id="super-experts-body"><tr><td colspan="5" style="text-align:center;">数据载入中...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 5. 最终评审结果与发布 -->
+                <div id="super-tab-results" class="super-tab-content" style="display: none;">
+                    <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.9rem; color: var(--gray);">专家打分自动加权汇总。评分争议时可追加专家；发布立项通过后生成公示。</span>
+                        <button class="btn btn-outline btn-sm" onclick="exportPassedCSV()"><svg class="icon-svg icon-btn" viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>导出立项汇总 CSV</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>课题名称</th><th>研究方向</th><th>平均得分</th><th>立项通过率</th><th>系统建议</th><th>发布状态</th><th>操作</th></tr></thead>
+                            <tbody id="super-results-body"><tr><td colspan="7" style="text-align:center;">数据载入中...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1. 专家指派弹窗 -->
+    <div class="modal" id="assign-expert-modal"><div class="modal-content">
+        <div class="modal-header"><h3>专家指派中心（同方向匹配与单位回避）</h3><button class="close-btn" onclick="closeModal('assign-expert-modal')">&times;</button></div>
+        <div class="modal-body">
+            <input type="hidden" id="assign-topic-id">
+            <div style="margin-bottom: 1rem; background-color: var(--primary-light); padding: 0.75rem; border-radius: 6px;">
+                <p style="font-size: 0.85rem;"><strong>课题方向：</strong><span id="assign-topic-cat"></span></p>
+                <p style="font-size: 0.85rem;"><strong>申报单位：</strong><span id="assign-topic-org"></span> (自动进行单位回避)</p>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <h4 style="font-size: 0.95rem; color: var(--primary);">匹配该方向的可用专家：</h4>
+                <button class="btn btn-outline btn-sm" onclick="autoPickThreeExperts()"><svg class="icon-svg icon-btn" viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2;"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/></svg>一键自动选择 3 位</button>
+            </div>
+            <div id="recommended-experts-list" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 250px; overflow-y: auto;"></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal('assign-expert-modal')">取消</button><button class="btn btn-primary btn-sm" onclick="confirmAssignExperts()">确认指派 (发送通知)</button></div>
+    </div></div>
+
+    <!-- 2. 追加第二轮专家弹窗 -->
+    <div class="modal" id="add-second-expert-modal"><div class="modal-content">
+        <div class="modal-header"><h3>追加第二次评审专家</h3><button class="close-btn" onclick="closeModal('add-second-expert-modal')">&times;</button></div>
+        <div class="modal-body">
+            <input type="hidden" id="second-topic-id">
+            <div style="margin-bottom: 1rem; background-color: var(--primary-light); padding: 0.75rem; border-radius: 6px;"><p style="font-size: 0.85rem;"><strong>课题名称：</strong><span id="second-topic-title"></span></p></div>
+            <h4 style="font-size: 0.95rem; color: var(--primary); margin-bottom: 0.5rem;">请选择一位匹配该方向且未参与第一轮的专家：</h4>
+            <div id="second-experts-list" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 250px; overflow-y: auto;"></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal('add-second-expert-modal')">取消</button><button class="btn btn-primary btn-sm" onclick="confirmAddSecondExpert()">确认追加</button></div>
+    </div></div>
+
+    <!-- 3. 专家评分明细弹窗 -->
+    <div class="modal" id="review-list-modal"><div class="modal-content" style="max-width: 750px;">
+        <div class="modal-header"><h3>专家评审意见明细</h3><button class="close-btn" onclick="closeModal('review-list-modal')">&times;</button></div>
+        <div class="modal-body"><div class="table-container"><table><thead><tr><th>评审号</th><th>打分</th><th>评审结论</th><th>评审意见</th><th>状态</th></tr></thead><tbody id="review-list-body"></tbody></table></div></div>
+        <div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal('review-list-modal')">关闭</button></div>
+    </div></div>
+
+    <!-- 4. 超管立项发布弹窗 -->
+    <div class="modal" id="publish-result-modal"><div class="modal-content">
+        <div class="modal-header"><h3>发布最终立项评审结果</h3><button class="close-btn" onclick="closeModal('publish-result-modal')">&times;</button></div>
+        <div class="modal-body">
+            <input type="hidden" id="publish-topic-id">
+            <div style="margin-bottom: 1rem; background-color: var(--primary-light); padding: 0.75rem; border-radius: 6px;">
+                <p style="font-size: 0.85rem;"><strong>课题名称：</strong><span id="publish-topic-title"></span></p>
+                <p style="font-size: 0.85rem;"><strong>加权结果：</strong>平均分 <span id="publish-avg-score"></span>，建议 <span id="publish-sys-suggest"></span></p>
+            </div>
+            <div class="form-group">
+                <label class="form-label">立项结论 *</label>
+                <div style="display: flex; gap: 2rem; padding: 0.25rem 0;"><label class="checkbox-item"><input type="radio" name="publish-pass" value="1" checked> 通过(正式立项)</label><label class="checkbox-item"><input type="radio" name="publish-pass" value="2"> 不通过</label></div>
+            </div>
+            <div class="form-group"><label class="form-label">官方批复评语 *</label><textarea class="form-control" id="publish-opinion" rows="4" required placeholder="请录入评语..."></textarea></div>
+            <div class="form-group"><label class="form-label">立项通知内容</label><textarea class="form-control" id="publish-announcement" rows="3" placeholder="通知说明..."></textarea></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal('publish-result-modal')">取消</button><button class="btn btn-primary btn-sm" onclick="confirmPublishResult()">正式发布立项结果</button></div>
+    </div></div>
+
+    <!-- 5. 格式初审审核详情弹窗 -->
+    <div class="modal" id="topic-detail-modal"><div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header"><h3>课题格式审核意见录入</h3><button class="close-btn" onclick="closeModal('topic-detail-modal')">&times;</button></div>
+        <div class="modal-body">
+            <input type="hidden" id="detail-topic-id">
+            <table style="width: 100%; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
+                <tr><th style="width: 25%; padding: 0.75rem;">课题名称</th><td id="detail-title" style="padding: 0.75rem;">-</td></tr>
+                <tr><th style="padding: 0.75rem;">主要研究方向</th><td id="detail-category" style="padding: 0.75rem;">-</td></tr>
+                <tr><th style="padding: 0.75rem;">申报单位</th><td id="detail-org" style="padding: 0.75rem;">-</td></tr>
+                <tr><th style="padding: 0.75rem;">附件下载</th><td id="detail-attachments" style="padding: 0.75rem;">-</td></tr>
+            </table>
+            <div class="form-group"><label class="form-label">初审意见录入 *</label><textarea class="form-control" id="detail-audit-opinion" rows="4" required placeholder="请输入您的初审格式意见..."></textarea></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="submitTopicAudit(2)" style="color:#ef4444; border-color:#fee2e2;">格式审核不通过退回</button><button class="btn btn-primary btn-sm" id="btn-audit-pass" onclick="submitTopicAudit(1)">格式初审通过</button></div>
+    </div></div>
+
+    <div class="toast" id="toast-box"></div>
+    <script src="/js/api.js"></script>
+    <script src="/js/admin_period.js"></script>
+    <script src="/js/admin_orgs.js"></script>
+    <script src="/js/admin_topics.js"></script>
+    <script src="/js/admin_results.js"></script>
+</body>
+</html>

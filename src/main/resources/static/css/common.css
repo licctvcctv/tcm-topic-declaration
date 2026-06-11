@@ -1,0 +1,178 @@
+:root {
+    --primary: #0d5c3a;       /* 国风中药深绿 */
+    --primary-hover: #073a24;
+    --primary-light: #eef7f2;
+    --accent: #c5a880;        /* 雅致古风金 */
+    --accent-hover: #b3956b;
+    --dark: #1b2620;          /* 深黛绿 */
+    --light: #f7faf8;
+    --gray: #64748b;
+    --border: #cbd5e1;
+    --shadow: 0 4px 20px -2px rgba(13, 92, 58, 0.08);
+    --shadow-lg: 0 10px 30px -5px rgba(13, 92, 58, 0.15);
+    --radius: 12px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Outfit', 'Noto Serif SC', -apple-system, sans-serif;
+    background-color: var(--light);
+    color: var(--dark);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* 顶部导航 */
+header {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(13, 92, 58, 0.1);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 10px rgba(0,0,0,0.02);
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.logo-icon {
+    width: 42px;
+    height: 42px;
+    background: var(--primary-light);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    border: 1px solid rgba(13, 92, 58, 0.15);
+    box-shadow: 0 4px 10px rgba(13, 92, 58, 0.05);
+}
+
+.logo-text h1 {
+    font-size: 1.2rem;
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.logo-text p {
+    font-size: 0.75rem;
+    color: var(--gray);
+    letter-spacing: 2px;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.user-profile-widget {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(13, 92, 58, 0.15);
+}
+
+.logout-btn {
+    background-color: transparent;
+    color: #ef4444;
+    border: 1px solid #fee2e2;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.logout-btn:hover {
+    background-color: #fee2e2;
+}
+
+/* 主体布局 */
+.main-container {
+    max-width: 1400px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 2rem;
+    min-height: calc(100vh - 180px);
+}
+
+/* 侧边导航 */
+.sidebar {
+    background: white;
+    border-radius: var(--radius);
+    padding: 1.5rem 1rem;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(13, 92, 58, 0.05);
+    height: fit-content;
+}
+
+.sidebar-menu {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.menu-item a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: var(--dark);
+    text-decoration: none;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.menu-item.active a, .menu-item a:hover {
+    background-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.menu-item.active a {
+    font-weight: 700;
+}
+
+/* 视图面板容器 */
+.viewport {
+    background: white;
+    border-radius: var(--radius);
+    padding: 2rem;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(13, 92, 58, 0.05);
+    position: relative;
+}

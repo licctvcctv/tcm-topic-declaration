@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: tcm-topic-declaration
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:topic_db}?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root_password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+
+# JWT 配置，支持环境变量覆盖以保障安全
+jwt:
+  secret: ${JWT_SECRET:c3ByaW5nLWJvb3Qtc2VjdXJpdHktand0LWVudGVycHJpc2UtMjg4LWJpdC1zZWNyZXQta2V5LXN1cGVyLXNlY3VyZQ==}
+  expiration: ${JWT_EXPIRATION:86400} # 默认24小时 (秒)
+
+# 文件上传与保存路径
+file:
+  upload-dir: ${FILE_UPLOAD_DIR:./uploads}

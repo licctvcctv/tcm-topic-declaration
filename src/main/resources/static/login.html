@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中医药自选课题申报管理平台 - 登录</title>
+    <!-- 引入 premium 字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body>
+
+    <!-- 顶部导航 -->
+    <header>
+        <a class="logo-area" href="/">
+            <div class="logo-icon">
+                <svg viewBox="0 0 64 64" style="width: 28px; height: 28px; display: block;" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="32" cy="32" r="30" stroke="var(--primary)" stroke-width="2" fill="none" opacity="0.2"/>
+                    <circle cx="32" cy="32" r="27" stroke="var(--accent)" stroke-width="1.2" fill="none" stroke-dasharray="3 2" opacity="0.6"/>
+                    <path d="M32 12 C25 12 23 18 28 24 C23 30 19 36 21 46 C24 53 32 53 32 53 Z" fill="var(--primary)"/>
+                    <path d="M32 12 C38 12 40 18 36 24 C41 30 45 36 43 46 C40 53 32 53 32 53 Z" fill="var(--accent)"/>
+                    <path d="M32 12 C28 18 36 24 32 30 C28 36 36 42 32 53" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <circle cx="37" cy="40" r="2.5" fill="#ffffff" opacity="0.9"/><circle cx="27" cy="18" r="1.5" fill="#ffffff" opacity="0.9"/>
+                </svg>
+            </div>
+            <div class="logo-text">
+                <h1>中医药课题申报平台</h1>
+                <p>LOGIN PORTAL</p>
+            </div>
+        </a>
+        <div class="header-actions">
+            <a href="/" class="btn btn-outline btn-sm">返回首页</a>
+        </div>
+    </header>
+
+    <div class="auth-page-container">
+        <div class="auth-card">
+            <div class="auth-card-header">
+                <h2>登录系统</h2>
+                <p>请输入您的用户名和密码以进入工作台</p>
+            </div>
+            
+            <div class="auth-card-body">
+                <form id="login-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label">用户名 / 手机号</label>
+                        <input type="text" class="form-control" id="login-username" required placeholder="请输入您的账户名" autocomplete="username">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">密码</label>
+                        <input type="password" class="form-control" id="login-password" required placeholder="请输入密码" autocomplete="current-password">
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
+                        <label style="display: flex; align-items: center; gap: 0.25rem; cursor: pointer;">
+                            <input type="checkbox" id="remember-me"> 记住我
+                        </label>
+                        <a href="#" onclick="alert('请联系您的机构管理员或省局超级管理员重置密码！')" style="color: var(--primary); text-decoration: none; font-weight: 500;">忘记密码？</a>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">立即登录</button>
+                    
+                    <div style="text-align: center; font-size: 0.85rem; color: var(--gray);">
+                        还没有账号？<a href="/register.html" style="color: var(--primary); text-decoration: none; font-weight: 700;">点击注册账号</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示框容器 -->
+    <div class="toast" id="toast-box"></div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/login.js"></script>
+</body>
+</html>

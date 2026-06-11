@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中医药自选课题申报管理平台 - 注册</title>
+    <!-- 引入 premium 字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/auth.css">
+    <style>
+        .auth-card {
+            max-width: 550px; /* 注册页面包含表单较多，适当调宽 */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部导航 -->
+    <header>
+        <a class="logo-area" href="/">
+            <div class="logo-icon">
+                <svg viewBox="0 0 64 64" style="width: 28px; height: 28px; display: block;" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="32" cy="32" r="30" stroke="var(--primary)" stroke-width="2" fill="none" opacity="0.2"/>
+                    <circle cx="32" cy="32" r="27" stroke="var(--accent)" stroke-width="1.2" fill="none" stroke-dasharray="3 2" opacity="0.6"/>
+                    <path d="M32 12 C25 12 23 18 28 24 C23 30 19 36 21 46 C24 53 32 53 32 53 Z" fill="var(--primary)"/>
+                    <path d="M32 12 C38 12 40 18 36 24 C41 30 45 36 43 46 C40 53 32 53 32 53 Z" fill="var(--accent)"/>
+                    <path d="M32 12 C28 18 36 24 32 30 C28 36 36 42 32 53" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <circle cx="37" cy="40" r="2.5" fill="#ffffff" opacity="0.9"/><circle cx="27" cy="18" r="1.5" fill="#ffffff" opacity="0.9"/>
+                </svg>
+            </div>
+            <div class="logo-text">
+                <h1>中医药课题申报平台</h1>
+                <p>REGISTRATION PORTAL</p>
+            </div>
+        </a>
+        <div class="header-actions">
+            <a href="/login.html" class="btn btn-outline btn-sm">返回登录</a>
+        </div>
+    </header>
+
+    <div class="auth-page-container">
+        <div class="auth-card">
+            <div class="auth-card-header">
+                <h2>注册新账号</h2>
+                <p>请选择您的系统角色并填写相应的信息</p>
+            </div>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchRegisterTab('user', this)">申报个人</button>
+                <button class="auth-tab" onclick="switchRegisterTab('org', this)">申报单位</button>
+                <button class="auth-tab" onclick="switchRegisterTab('expert', this)">评审专家</button>
+            </div>
+
+            <div class="auth-card-body">
+                <!-- ================= 申报人注册表单 ================= -->
+                <div id="tab-user" class="tab-pane active">
+                    <form onsubmit="handleUserRegister(event)">
+                        <div class="form-group">
+                            <label class="form-label">登录账号 *</label>
+                            <input type="text" class="form-control" id="user-username" required placeholder="建议使用手机号或邮箱">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">登录密码 *</label>
+                            <input type="password" class="form-control" id="user-password" required placeholder="长度不少于6位" autocomplete="new-password">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">真实姓名 *</label>
+                            <input type="text" class="form-control" id="user-realname" required placeholder="请输入您的真实姓名">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">手机号码 *</label>
+                            <input type="tel" class="form-control" id="user-mobile" required placeholder="用于接收状态及通知短信">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">电子邮箱</label>
+                            <input type="email" class="form-control" id="user-email" placeholder="请输入常用电子邮箱">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">选择您所属申报单位 *</label>
+                            <select class="form-control" id="user-org" required>
+                                <option value="">正在加载激活单位列表...</option>
+                            </select>
+                            <p style="font-size: 0.75rem; color: var(--gray); margin-top: 0.25rem;">找不到单位？请联系您的机构管理员先注册单位并等待省局激活。</p>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">立即注册个人账号</button>
+                    </form>
+                </div>
+
+                <!-- ================= 申报机构/单位注册表单 ================= -->
+                <div id="tab-org" class="tab-pane">
+                    <form onsubmit="handleOrgRegister(event)">
+                        <div class="form-group">
+                            <label class="form-label">单位/机构正式名称 *</label>
+                            <input type="text" class="form-control" id="org-name" required placeholder="例如：省中医院、某中医药大学">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">所属省份 *</label>
+                            <select class="form-control" id="org-province" required>
+                                <option value="">请选择省份</option>
+                                <option value="北京市">北京市</option>
+                                <option value="天津市">天津市</option>
+                                <option value="河北省">河北省</option>
+                                <option value="山西省">山西省</option>
+                                <option value="内蒙古自治区">内蒙古自治区</option>
+                                <option value="辽宁省">辽宁省</option>
+                                <option value="吉林省">吉林省</option>
+                                <option value="黑龙江省">黑龙江省</option>
+                                <option value="上海市">上海市</option>
+                                <option value="江苏省">江苏省</option>
+                                <option value="浙江省">浙江省</option>
+                                <option value="安徽省">安徽省</option>
+                                <option value="福建省">福建省</option>
+                                <option value="江西省">江西省</option>
+                                <option value="山东省">山东省</option>
+                                <option value="河南省">河南省</option>
+                                <option value="湖北省">湖北省</option>
+                                <option value="湖南省">湖南省</option>
+                                <option value="广东省">广东省</option>
+                                <option value="广西壮族自治区">广西壮族自治区</option>
+                                <option value="海南省">海南省</option>
+                                <option value="重庆市">重庆市</option>
+                                <option value="四川省">四川省</option>
+                                <option value="贵州省">贵州省</option>
+                                <option value="云南省">云南省</option>
+                                <option value="西藏自治区">西藏自治区</option>
+                                <option value="陕西省">陕西省</option>
+                                <option value="甘肃省">甘肃省</option>
+                                <option value="青海省">青海省</option>
+                                <option value="宁夏回族自治区">宁夏回族自治区</option>
+                                <option value="新疆维吾尔自治区">新疆维吾尔自治区</option>
+                                <option value="台湾省">台湾省</option>
+                                <option value="香港特别行政区">香港特别行政区</option>
+                                <option value="澳门特别行政区">澳门特别行政区</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">单位详细地址 *</label>
+                            <input type="text" class="form-control" id="org-address" required placeholder="请输入详细通讯地址">
+                        </div>
+                        
+                        <hr style="border: none; border-top: 1px dashed #cbd5e1; margin: 1.5rem 0;">
+                        <h4 style="font-size: 0.95rem; color: var(--primary); margin-bottom: 1rem; font-family: 'Noto Serif SC', serif;">🔑 机构管理员账号配置</h4>
+                        
+                        <div class="form-group">
+                            <label class="form-label">管理员登录账号 *</label>
+                            <input type="text" class="form-control" id="org-username" required placeholder="建议使用联系人手机号">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">管理员登录密码 *</label>
+                            <input type="password" class="form-control" id="org-password" required placeholder="设置管理员密码" autocomplete="new-password">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">管理员姓名 *</label>
+                            <input type="text" class="form-control" id="org-realname" required placeholder="请输入管理员姓名">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">联系电话 *</label>
+                            <input type="tel" class="form-control" id="org-mobile" required placeholder="请输入管理员联系电话">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">联系邮箱</label>
+                            <input type="email" class="form-control" id="org-email" placeholder="请输入常用联系邮箱">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">单位营业执照 / 医疗机构许可证资质证书上传 *</label>
+                            <div class="file-upload-box" onclick="triggerRegisterUpload('org-license')">
+                                <div style="color: var(--primary); margin-bottom: 0.5rem;">
+                                    <svg class="icon-svg icon-lg"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="8" x2="8" y2="8"/><line x1="16" y1="12" x2="8" y2="12"/><line x1="12" y1="16" x2="8" y2="16"/></svg>
+                                </div>
+                                <p id="org-license-name" style="font-size: 0.85rem; margin-top: 0.5rem; color: var(--gray);">点击上传执照/证书 (png/jpg/jpeg/pdf)</p>
+                                <input type="file" id="org-license-input" style="display: none;" onchange="handleRegisterFileChange(this, 'org-license')">
+                                <div class="progress-bar-container" id="org-license-progress-box"><div class="progress-bar" id="org-license-progress"></div></div>
+                                <img id="org-license-preview" class="upload-preview" alt="资质预览">
+                            </div>
+                            <input type="hidden" id="org-license-url" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">立即申请注册机构</button>
+                    </form>
+                </div>
+
+                <!-- ================= 专家注册表单 ================= -->
+                <div id="tab-expert" class="tab-pane">
+                    <form onsubmit="handleExpertRegister(event)">
+                        <div class="form-group">
+                            <label class="form-label">姓名 *</label>
+                            <input type="text" class="form-control" id="expert-realname" required placeholder="请输入您的真实姓名">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">密码 *</label>
+                            <input type="password" class="form-control" id="expert-password" required placeholder="请输入不少于6位的密码" autocomplete="new-password">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">手机号码 *</label>
+                            <input type="tel" class="form-control" id="expert-mobile" required placeholder="用于作为登录账号和接收评审通知">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">主要学术研究方向 (单选) *</label>
+                            <select class="form-control" id="expert-major" required>
+                                <option value="">正在加载研究方向列表...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">次要/其他擅长研究方向 (多选)</label>
+                            <div class="checkbox-group" id="expert-minors">
+                                <!-- 动态渲染次要方向复选框 -->
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">手写签字图片/电子签名上传 *</label>
+                            <div class="file-upload-box" onclick="triggerRegisterUpload('expert-signature')">
+                                <div style="color: var(--primary); margin-bottom: 0.5rem;">
+                                    <svg class="icon-svg icon-lg"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                </div>
+                                <p id="expert-signature-name" style="font-size: 0.85rem; margin-top: 0.5rem; color: var(--gray);">点击上传您本人的手写签字图片 (png/jpg/jpeg)</p>
+                                <input type="file" id="expert-signature-input" style="display: none;" onchange="handleRegisterFileChange(this, 'expert-signature')">
+                                <div class="progress-bar-container" id="expert-signature-progress-box"><div class="progress-bar" id="expert-signature-progress"></div></div>
+                                <img id="expert-signature-preview" class="upload-preview" alt="签名预览">
+                            </div>
+                            <input type="hidden" id="expert-signature-url" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">立即注册专家账号</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示框容器 -->
+    <div class="toast" id="toast-box"></div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/register.js"></script>
+</body>
+</html>

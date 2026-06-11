@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中医药自选课题申报管理平台 - 门户</title>
+    <!-- 引入 premium 字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/auth.css">
+    <style>
+        /* 额外微调门户专用排版 */
+        .portal-main {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        .feature-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(13, 92, 58, 0.05);
+            text-align: center;
+            transition: var(--transition);
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+        .feature-card h4 {
+            color: var(--primary);
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        .feature-card p {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部导航 -->
+    <header>
+        <a class="logo-area" href="/">
+            <div class="logo-icon">
+                <svg viewBox="0 0 64 64" style="width: 28px; height: 28px; display: block;" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="32" cy="32" r="30" stroke="var(--primary)" stroke-width="2" fill="none" opacity="0.2"/>
+                    <circle cx="32" cy="32" r="27" stroke="var(--accent)" stroke-width="1.2" fill="none" stroke-dasharray="3 2" opacity="0.6"/>
+                    <path d="M32 12 C25 12 23 18 28 24 C23 30 19 36 21 46 C24 53 32 53 32 53 Z" fill="var(--primary)"/>
+                    <path d="M32 12 C38 12 40 18 36 24 C41 30 45 36 43 46 C40 53 32 53 32 53 Z" fill="var(--accent)"/>
+                    <path d="M32 12 C28 18 36 24 32 30 C28 36 36 42 32 53" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <circle cx="37" cy="40" r="2.5" fill="#ffffff" opacity="0.9"/><circle cx="27" cy="18" r="1.5" fill="#ffffff" opacity="0.9"/>
+                </svg>
+            </div>
+            <div class="logo-text">
+                <h1>中医药课题申报平台</h1>
+                <p>PORTAL HOME</p>
+            </div>
+        </a>
+
+        <div class="header-actions" id="portal-nav-actions">
+            <!-- 动态载入登录/工作台按钮 -->
+            <a href="/login.html" class="btn btn-outline btn-sm">登录系统</a>
+            <a href="/register.html" class="btn btn-primary btn-sm">账号注册</a>
+        </div>
+    </header>
+
+    <!-- 主视觉区域 -->
+    <div class="portal-hero">
+        <h2>中医药自选课题申报管理平台</h2>
+        <p>传承精华，守正创新。本平台致力于中医药领域学术课题的公开申报、资格审查、专家双盲匿名评审与规范化立项管理。</p>
+        <div id="hero-action-box">
+            <a href="/login.html" class="btn btn-accent">进入申报与评审系统</a>
+        </div>
+    </div>
+
+    <!-- 申报状态与公告注意事项 -->
+    <div class="portal-status-container">
+        <div class="portal-status-card">
+            <div class="instructions-box">
+                <h3>
+                    <svg class="icon-svg icon-btn"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                    申报指南与注意事项
+                </h3>
+                <p id="portal-instructions" style="font-size: 0.9rem; color: var(--dark); white-space: pre-line; line-height: 1.8;">
+                    正在加载系统公告和注意事项，请稍候...
+                </p>
+            </div>
+            <div class="time-box">
+                <h3>
+                    <svg class="icon-svg icon-btn"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    申报通道状态
+                </h3>
+                <div id="portal-period-status" style="margin-bottom: 1rem;">
+                    <!-- 动态状态徽章 -->
+                    <span class="badge badge-draft">获取周期中...</span>
+                </div>
+                <div class="time-item"><strong>申报年份：</strong><span id="active-year">-</span> 年</div>
+                <div class="time-item"><strong>开始时间：</strong><span id="active-start">-</span></div>
+                <div class="time-item"><strong>截止时间：</strong><span id="active-end">-</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 核心功能模块介绍 -->
+    <div class="portal-main">
+        <div class="public-list-header">系统四大核心角色流程</div>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon" style="color: var(--primary);">
+                    <svg class="icon-svg icon-lg"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                </div>
+                <h4>普通申报人</h4>
+                <p>在线自主填报课题、选择研究方向。可上传正式PDF/Word格式任务书及完全匿名的设计论证活页附件，实时接收审核与结果通知。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="color: var(--primary);">
+                    <svg class="icon-svg icon-lg"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <h4>申报单位管理员</h4>
+                <p>负责本机构（医院、高校、科研所）的员工资质审核，在系统核定名额上限内指派具体用户的课题申报授权，初审本单位申报课题并上报。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="color: var(--primary);">
+                    <svg class="icon-svg icon-lg"><path d="M22 10v6M2 10l10-5 10 5-10 5-10 5z"/><path d="M6 12v5c0 2 2.5 3 6 3s6-1 6-3v-5"/></svg>
+                </div>
+                <h4>评审专家</h4>
+                <p>系统自动进行单位回避及研究方向智能匹配指派。专家可在线接收或拒绝邀请，在完成双盲匿名评审及电子签名后，评审权限自动锁定防篡改。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="color: var(--primary);">
+                    <svg class="icon-svg icon-lg"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </div>
+                <h4>省局超级管理员</h4>
+                <p>掌管全局课题名额配置、申报周期发布；进行课题格式终审，智能推荐及指派专家；自动统计评审结果并发布最终官方立项公告，支持报表导出。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer style="background-color: var(--dark); color: white; padding: 2rem 1rem; text-align: center; font-size: 0.85rem; margin-top: 4rem;">
+        <p>© 2026 中医药自选课题申报管理平台. All Rights Reserved.</p>
+        <p style="color: var(--gray); margin-top: 0.5rem;">技术支持：中医药管理部门信息中心</p>
+    </footer>
+
+    <!-- 提示框 -->
+    <div class="toast" id="toast-box"></div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 1. 检查当前是否登录
+            const userInfo = tokenStorage.getUserInfo();
+            const token = tokenStorage.getToken();
+            if (token && userInfo) {
+                // 已登录，更新导航栏和主按钮
+                const navActions = document.getElementById('portal-nav-actions');
+                const dashboardUrl = getDashboardUrl(userInfo.role);
+                navActions.innerHTML = `
+                    <div class="user-profile-widget">
+                        <div class="user-avatar">${userInfo.realName.substring(0, 1)}</div>
+                        <span>${userInfo.realName} (${getRoleText(userInfo.role)})</span>
+                        <a href="${dashboardUrl}" class="btn btn-primary btn-sm">进入工作台</a>
+                        <button onclick="api.auth.logout()" class="btn btn-outline btn-sm">退出</button>
+                    </div>
+                `;
+
+                const heroActionBox = document.getElementById('hero-action-box');
+                heroActionBox.innerHTML = `
+                    <a href="${dashboardUrl}" class="btn btn-accent">进入我的工作台</a>
+                `;
+            }
+
+            // 2. 加载周期状态和注意事项
+            try {
+                const period = await api.topic.getActivePeriod();
+                const isOpen = await api.topic.isOpen();
+                
+                if (period) {
+                    document.getElementById('active-year').textContent = period.year;
+                    document.getElementById('active-start').textContent = formatDateTime(period.startTime);
+                    document.getElementById('active-end').textContent = formatDateTime(period.endTime);
+                    document.getElementById('portal-instructions').textContent = period.instructions || '无特别注意事项';
+                    
+                    const statusBox = document.getElementById('portal-period-status');
+                    if (isOpen) {
+                        statusBox.innerHTML = '<span class="badge badge-success">申报进行中</span>';
+                    } else {
+                        statusBox.innerHTML = '<span class="badge badge-error">已关闭 / 未开始</span>';
+                    }
+                } else {
+                    document.getElementById('portal-instructions').textContent = '暂无已发布的申报周期，请关注官方通知。';
+                    document.getElementById('portal-period-status').innerHTML = '<span class="badge badge-draft">暂无周期</span>';
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('portal-instructions').textContent = '未能加载申报须知数据，系统可能在维护中。';
+                document.getElementById('portal-period-status').innerHTML = '<span class="badge badge-error">通信失败</span>';
+            }
+        });
+
+        function getDashboardUrl(role) {
+            const map = {
+                'NORMAL_USER': '/user_dashboard.html',
+                'ORG_ADMIN': '/org_dashboard.html',
+                'SUPER_ADMIN': '/admin_dashboard.html',
+                'EXPERT': '/expert_dashboard.html'
+            };
+            return map[role] || '/login.html';
+        }
+
+        function getRoleText(role) {
+            const map = {
+                'NORMAL_USER': '申报人',
+                'ORG_ADMIN': '机构管理员',
+                'SUPER_ADMIN': '系统管理员',
+                'EXPERT': '评审专家'
+            };
+            return map[role] || role;
+        }
+
+        function formatDateTime(dtStr) {
+            if (!dtStr) return '-';
+            try {
+                const d = new Date(dtStr);
+                return d.toLocaleString('zh-CN', { hour12: false });
+            } catch (e) {
+                return dtStr;
+            }
+        }
+    </script>
+</body>
+</html>

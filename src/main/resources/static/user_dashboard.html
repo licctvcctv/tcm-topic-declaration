@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中医药自选课题申报管理平台 - 申报个人</title>
+    <!-- 引入 premium 字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/components.css">
+</head>
+<body>
+
+    <!-- 头部导航 -->
+    <header>
+        <a class="logo-area" href="/">
+            <div class="logo-icon">
+                <svg viewBox="0 0 64 64" style="width: 28px; height: 28px; display: block;" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="32" cy="32" r="30" stroke="var(--primary)" stroke-width="2" fill="none" opacity="0.2"/>
+                    <circle cx="32" cy="32" r="27" stroke="var(--accent)" stroke-width="1.2" fill="none" stroke-dasharray="3 2" opacity="0.6"/>
+                    <path d="M32 12 C25 12 23 18 28 24 C23 30 19 36 21 46 C24 53 32 53 32 53 Z" fill="var(--primary)"/>
+                    <path d="M32 12 C38 12 40 18 36 24 C41 30 45 36 43 46 C40 53 32 53 32 53 Z" fill="var(--accent)"/>
+                    <path d="M32 12 C28 18 36 24 32 30 C28 36 36 42 32 53" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <circle cx="37" cy="40" r="2.5" fill="#ffffff" opacity="0.9"/>
+                    <circle cx="27" cy="18" r="1.5" fill="#ffffff" opacity="0.9"/>
+                </svg>
+            </div>
+            <div class="logo-text">
+                <h1>中医药课题申报平台</h1>
+                <p>DECLARER CONSOLE</p>
+            </div>
+        </a>
+
+        <div class="header-actions">
+            <div class="user-profile-widget" id="user-profile-box">
+                <div class="user-avatar" id="profile-avatar">-</div>
+                <span id="profile-name">加载中...</span>
+                <button onclick="api.auth.logout()" class="logout-btn">安全退出</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主布局 -->
+    <div class="main-container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="menu-item active" id="user-menu-declare" onclick="switchUserPanel('declare')">
+                    <a href="#">
+                        <svg class="icon-svg icon-btn" viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        课题申报填报
+                    </a>
+                </li>
+                <li class="menu-item" id="user-menu-records" onclick="switchUserPanel('records')">
+                    <a href="#">
+                        <svg class="icon-svg icon-btn" viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+                        我的申报记录
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 主内容视窗 -->
+        <div class="viewport">
+            <!-- 填报面板 -->
+            <div class="panel active" id="user-panel-declare">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <h2>自选课题申报填报</h2>
+                        <p>请在规定申报周期内进行课题填报及《任务书》、《活页》附件上传。</p>
+                    </div>
+                    <div id="declarer-auth-status" class="badge"></div>
+                </div>
+
+                <!-- 填报须知 -->
+                <div style="background-color: var(--primary-light); border: 1px solid rgba(13, 92, 58, 0.15); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <h4 style="color: var(--primary); font-family: 'Noto Serif SC', serif; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.4rem;">
+                        <svg class="icon-svg" viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        填报注意事项
+                    </h4>
+                    <p id="period-instructions" style="font-size: 0.85rem; color: var(--dark); white-space: pre-line;">正在载入中...</p>
+                </div>
+
+                <!-- 填报表单 -->
+                <form id="declaration-form" onsubmit="handleDeclarationSubmit(event)">
+                    <input type="hidden" id="topic-id">
+                    <div class="form-group">
+                        <label class="form-label">课题名称 *</label>
+                        <input type="text" class="form-control" id="topic-title" required placeholder="请输入您的中医药自选研究课题名称">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">主要研究方向（单选） *</label>
+                        <select class="form-control" id="topic-category" required>
+                            <option value="">请选择主要方向</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">次要研究方向（多选）</label>
+                        <div class="checkbox-group" id="topic-secondary-categories">
+                            <!-- 动态加载次要研究方向 -->
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">接收通知手机号码 *</label>
+                        <input type="tel" class="form-control" id="topic-mobile" required placeholder="请输入可以接收验证及评审状态的手机号码">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                        <div class="form-group">
+                            <label class="form-label">任务书上传 (含单位负责人签名) *</label>
+                            <div class="file-upload-box" onclick="triggerFileUpload('task-book')">
+                                <div style="color: var(--primary); margin-bottom: 0.5rem;">
+                                    <svg class="icon-svg icon-lg" viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                </div>
+                                <p id="task-book-name" style="font-size: 0.85rem; margin-top: 0.5rem; color: var(--gray);">点击上传《任务书》 (doc/docx/pdf)</p>
+                                <input type="file" id="task-book-input" style="display: none;" onchange="handleFileChange(this, 'task-book')">
+                                <div class="progress-bar-container" id="task-book-progress-box"><div class="progress-bar" id="task-book-progress"></div></div>
+                            </div>
+                            <input type="hidden" id="task-book-url" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">设计论证活页上传 (盲评用，禁止带个人/单位信息) *</label>
+                            <div class="file-upload-box" onclick="triggerFileUpload('anonymous')">
+                                <div style="color: var(--primary); margin-bottom: 0.5rem;">
+                                    <svg class="icon-svg icon-lg" viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                </div>
+                                <p id="anonymous-name" style="font-size: 0.85rem; margin-top: 0.5rem; color: var(--gray);">点击上传《活页》 (doc/docx/pdf)</p>
+                                <input type="file" id="anonymous-input" style="display: none;" onchange="handleFileChange(this, 'anonymous')">
+                                <div class="progress-bar-container" id="anonymous-progress-box"><div class="progress-bar" id="anonymous-progress"></div></div>
+                            </div>
+                            <input type="hidden" id="anonymous-page-url" required>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end;" id="declaration-form-actions">
+                        <button type="button" class="btn btn-outline" onclick="saveDeclarationDraft()">保存为草稿</button>
+                        <button type="submit" class="btn btn-primary">提交审核</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 记录面板 -->
+            <div class="panel" id="user-panel-records" style="display: none;">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <h2>我的申报记录</h2>
+                        <p>查看历史申报课题的审核状态、专家评分以及最终立项结果通知。</p>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>课题名称</th>
+                                <th>主要方向</th>
+                                <th>提交时间</th>
+                                <th>状态</th>
+                                <th>评分</th>
+                                <th>结果</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="declarer-records-body">
+                            <tr><td colspan="7" style="text-align:center;">暂无数据</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- 通用详情弹窗 -->
+    <div class="modal" id="topic-detail-modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3>课题申报详情查阅</h3>
+                <button class="close-btn" onclick="closeModal('topic-detail-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <table style="width: 100%; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
+                    <tr>
+                        <th style="width: 25%; padding: 0.75rem;">课题名称</th>
+                        <td id="detail-title" style="padding: 0.75rem;">-</td>
+                    </tr>
+                    <tr>
+                        <th style="padding: 0.75rem;">主要研究方向</th>
+                        <td id="detail-category" style="padding: 0.75rem;">-</td>
+                    </tr>
+                    <tr>
+                        <th style="padding: 0.75rem;">申报省份/单位</th>
+                        <td id="detail-org" style="padding: 0.75rem;">-</td>
+                    </tr>
+                    <tr>
+                        <th style="padding: 0.75rem;">联系方式</th>
+                        <td id="detail-mobile" style="padding: 0.75rem;">-</td>
+                    </tr>
+                    <tr>
+                        <th style="padding: 0.75rem;">附件下载</th>
+                        <td id="detail-attachments" style="padding: 0.75rem;">-</td>
+                    </tr>
+                </table>
+                <div class="form-group">
+                    <label class="form-label">历史审核/审批意见</label>
+                    <textarea class="form-control" id="detail-audit-opinion" rows="4" disabled></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-sm" onclick="closeModal('topic-detail-modal')">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast-box"></div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/user_dashboard.js"></script>
+</body>
+</html>
